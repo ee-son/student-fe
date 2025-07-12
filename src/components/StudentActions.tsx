@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import StudentFormModal from './StudentFormModal';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
 type Student = {
   id: string;
@@ -17,6 +18,10 @@ type Props = {
 
 const StudentActions: React.FC<Props> = ({ student, onSuccess, isCreate = false }) => {
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleDelete = () => setShowDeleteModal(true);
+  const handleCancelDelete = () => setShowDeleteModal(false);
 
   const handleCreate = (data: Omit<Student, 'id'>) => {
     axios.post('http://127.0.0.1:8080/api/students', data)
@@ -37,13 +42,14 @@ const StudentActions: React.FC<Props> = ({ student, onSuccess, isCreate = false 
       .catch(console.error);
   };
 
-  const handleDelete = () => {
+  const confirmDelete = () => {
     if (!student) return;
-    if (confirm('Yakin ingin menghapus mahasiswa ini?')) {
-      axios.delete(`http://127.0.0.1:8080/api/students/${student.id}`)
-        .then(onSuccess)
-        .catch(console.error);
-    }
+    axios.delete(`http://127.0.0.1:8080/api/students/${student.id}`)
+      .then(() => {
+        setShowDeleteModal(false);
+        onSuccess();
+      })
+      .catch(console.error);
   };
 
   return (
@@ -84,6 +90,13 @@ const StudentActions: React.FC<Props> = ({ student, onSuccess, isCreate = false 
                 tanggalLahir: student?.tanggalLahir || '',
               }
         }
+      />
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onCancel={handleCancelDelete}
+        onConfirm={confirmDelete}
+        message="Apakah Anda yakin ingin menghapus data mahasiswa ini?"
       />
     </>
   );
